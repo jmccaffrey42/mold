@@ -1,0 +1,55 @@
+import abc
+import inspect
+from typing import Callable
+from typing import Dict
+from typing import Set
+from typing import Union
+
+SYSTEM_TYPES = [abc.ABC, object, inspect._empty]
+
+
+def get_provided(f) -> Set[type]:
+    if type(f) in SYSTEM_TYPES or f in SYSTEM_TYPES:
+        return set()
+
+    provided = set()
+    if isinstance(f, type):
+        provided.add(f)
+        for parent in f.__bases__:
+            provided = provided.union(get_provided(parent))
+    elif callable(f):
+        provided = get_provided(inspect.signature(f).return_annotation)
+    else:
+        raise ValueError()
+
+    return provided
+
+
+def get_required(f, ignored) -> Dict[str, type]:
+    required = dict()
+
+    if not ignored:
+        ignored = []
+
+    for name, p in inspect.signature(f).parameters.items():
+        if name not in ignored:
+            required[name] = p.annotation
+
+    return required
+
+
+class BeanDefinition:
+    factory: Callable
+    types_required: Dict[str, type]
+    types_provided: Set[type]
+    is_primary = False
+
+    def __init__(self, f: Union[type, Callable], wrapped, ignored=None, primary=False):
+        self.name = f.__name__
+        self.factory = wrapped
+        self.types_provided = get_provided(f)
+        self.types_required = get_required(f, ignored)
+        self.is_primary = primary
+
+    def __repr__(self):
+        return f'BeanDef({self.name}, provided={self.types_provided}, required={self.types_required}), is_primary={self.is_primary} '
