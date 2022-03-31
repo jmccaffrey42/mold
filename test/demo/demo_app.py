@@ -1,12 +1,14 @@
 from dataclasses import dataclass
 
-from demo.order_repo import SqlSession
+from demo.sql_order_repo import SqlSession
 from demo.order_service import OrderService
 from mold import BeanContext
 from mold import BeanRegistry
 from mold import EventRegistry
+from mold import dispatch_event
 from mold import event_handler
 from mold import factory
+from mold import scan_beans
 
 
 @dataclass
@@ -26,13 +28,10 @@ def demo_order_handler_bar(event: DemoEvent, order_service: OrderService):
     return order_service.get_order('test')
 
 
-def handle_event(event):
-    for handler in EventRegistry.get().get_handlers(type(event)):
-        handler(event)
-
-
 def main():
     use_sql = True
+
+    scan_beans('.')
 
     with BeanContext():
         if use_sql:
@@ -43,7 +42,7 @@ def main():
         BeanRegistry.get().dump()
 
         event = DemoEvent(msg="test")
-        handle_event(event)
+        dispatch_event(event)
 
 
 if __name__ == '__main__':

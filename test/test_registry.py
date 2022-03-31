@@ -1,10 +1,18 @@
-import unittest
+from mold import BeanRegistry
+from mold import scan_beans
 
 
-class MyTestCase(unittest.TestCase):
-    def test_something(self):
-        self.assertEqual(True, False)  # add assertion here
+def test_simple_register():
+    scan_beans('demo')
+    beans = BeanRegistry.get().beans()
+    expected_beans = {
+        'OrderService',
+        'InMemoryOrderRepo',
+        'SqlOrderRepo',
+        'demo_order_handler_foo',
+        'demo_order_handler_bar',
+    }
 
+    bean_names = {b.name for b in beans}
 
-if __name__ == '__main__':
-    unittest.main()
+    assert expected_beans == bean_names

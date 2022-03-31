@@ -14,11 +14,13 @@ logger = logging.getLogger(__name__)
 class BeanContext:
 
     _bean_instances: Dict[BeanDefinition, Any]
+    _bean_dep_cache: Dict[str, Dict[str, Any]]
 
     _context_stack: List['BeanContext'] = list()
 
     def __init__(self):
         self._bean_instances = dict()
+        self._bean_dep_cache = dict()
 
     @classmethod
     def __enter__(cls):
@@ -38,6 +40,9 @@ class BeanContext:
         return cls._context_stack[-1]
 
     def resolve_deps(self, resolve_bean: BeanDefinition) -> Optional[Dict[str, Any]]:
+        if resolve_bean.name in self._bean_dep_cache:
+            return self._bean_dep_cache[resolve_bean.name]
+
         registry = BeanRegistry.get()
 
         mapped_deps: Dict[str, BeanDefinition] = dict()
@@ -70,6 +75,8 @@ class BeanContext:
                 self._bean_instances[bean] = bean.factory()
 
             resolved_deps[k] = self._bean_instances[bean]
+
+        self._bean_dep_cache[resolve_bean.name] = resolved_deps
 
         return resolved_deps
 

@@ -39,10 +39,11 @@ def get_required(f, ignored) -> Dict[str, type]:
 
 
 class BeanDefinition:
+    name: str
     factory: Callable
     types_required: Dict[str, type]
     types_provided: Set[type]
-    is_primary = False
+    is_primary:bool = False
 
     def __init__(self, f: Union[type, Callable], wrapped, ignored=None, primary=False):
         self.name = f.__name__
@@ -53,3 +54,9 @@ class BeanDefinition:
 
     def __repr__(self):
         return f'BeanDef({self.name}, provided={self.types_provided}, required={self.types_required}), is_primary={self.is_primary} '
+
+    def __eq__(self, other):
+        return self.name == other.name
+
+    def __hash__(self):
+        return self.name.__hash__()

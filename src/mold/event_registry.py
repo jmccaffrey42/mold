@@ -18,3 +18,8 @@ class EventRegistry(Singleton):
 
     def get_handlers(self, event: type) -> List[Callable]:
         return self._events[event]
+
+
+def dispatch_event(event):
+    for handler in EventRegistry.get().get_handlers(type(event)):
+        handler(event)
